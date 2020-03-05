@@ -1,1 +1,129 @@
-fdsfa d
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.15.1/dist/phaser-arcade-physics.min.js"></script>
+</head>
+
+<body>
+
+    <script>
+        var config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 256,
+            backgroundColor: 0x3d6594,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    forceX: true
+                },
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update,
+                render: render
+            },
+            debug: true,
+            checkCollision: {
+                down: true
+            }
+        };
+
+        var game = new Phaser.Game(config);
+        var hero;
+        var platforms;
+        var cursors;
+        var base;
+        function preload() {
+            this.load.image("sheet", "sheet.png");
+            this.load.tilemapTiledJSON("map", "map.json");
+
+
+            this.load.atlas('bot', 'running_bot.png', 'running_bot.json');
+            this.load.spritesheet('dude',
+                'dude.png',
+                { frameWidth: 32, frameHeight: 48 }
+            );
+        }
+
+        function create() {
+            // Load a map from a 2D array of tile indices
+            const map = this.make.tilemap({ key: "map", tileWidth: 16, tileHeight: 16 });
+            const tileset = map.addTilesetImage("sheet");
+            map.createStaticLayer('BG1', tileset, 0, 0); // layer index, tileset, x, y
+            map.createStaticLayer('BG2', tileset, 0, 0);
+
+
+            base = map.createStaticLayer('Object', tileset, 0, 0); // layer index, tileset, x, y
+
+            // hero = this.add.
+            map.setCollision(9, true)
+
+            hero = this.physics.add.sprite(110, 110, 'dude')
+
+            hero.setBounce(0.2);
+            hero.setCollideWorldBounds(false);
+
+            this.anims.create({
+                key: 'left',
+                frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            this.anims.create({
+                key: 'turn',
+                frames: [{ key: 'dude', frame: 4 }],
+                frameRate: 20
+            });
+
+            this.anims.create({
+                key: 'right',
+                frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+                frameRate: 10,
+                repeat: -1
+            });
+
+            hero.body.setGravityY(1000)
+
+            cursors = this.input.keyboard.createCursorKeys();
+            this.physics.add.collider(hero, base)
+
+            var camera = this.cameras.main;
+
+            camera.startFollow(hero)
+            camera.followOffset.set(-100, 50);
+        }
+        function update() {
+            if (cursors.left.isDown) {
+                hero.setVelocityX(-100);
+
+                hero.anims.play('left', true);
+            }
+            else if (cursors.right.isDown) {
+                hero.setVelocityX(100);
+
+                hero.anims.play('right', true);
+            }
+            else {
+                hero.setVelocityX(0);
+                hero.anims.play('turn');
+            }
+
+            if (cursors.space.isDown) {
+                hero.setVelocityY(-130);
+            }
+
+        }
+        function render() {
+            this.debug.cameraInfo(this.camera, 32, 32);
+            this.debug.spriteCoords(hero, 32, 500);
+        }
+    </script>
+
+</body>
+
+</html>
